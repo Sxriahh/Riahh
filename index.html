@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Translator MVP</title>
+    <style>
+        /* CSS resets and variables */
+        :root {
+            /* CHICAGO BEARS COLOR PALETTE */
+            --bears-navy: #0B162A;
+            --bears-orange: #C83803;
+            --primary: var(--bears-orange); /* Switched primary to Orange */
+            
+            --bg-color: #F3F4F6; /* Light gray inside phone */
+            --card-bg: #FFFFFF;
+            --text-dark: #111827;
+            --text-light: #6B7280;
+            --yellow-flag: #FBBF24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Outer Page Background: Navy Blue with Large Bears Logo Watermark */
+        body {
+            background-color: var(--bears-navy);
+            /* Inline SVG for Chicago Bears 'C' Logo as background image */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 62' %3E%3Cpath d='M97.6,31C97.6,13.9,78.2,0,54.3,0C30.4,0,11,13.9,11,31c0,17.1,19.4,31,43.3,31c15.2,0,28.6-5.6,36.6-14.2l-12.8-6.9 c-5.3,4.6-13.6,7.5-23.8,7.5c-16.7,0-30.2-9.6-30.2-21.4c0-11.8,13.5-21.4,30.2-21.4c11,0,19.9,3.8,25.2,9.3L94.5,12.3 C85.6,4.8,71,0,54.3,0C24.3,0,0,13.9,0,31s24.3,31,54.3,31c19.1,0,35.7-5.6,45.7-14.2V31z' fill='%23C83803' fill-opacity='0.15'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 60% auto; /* Large watermark style */
+            background-attachment: fixed; /* Keeps logo centered when scrolling frame */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Mobile app container */
+        .mobile-frame {
+            width: 100%;
+            max-width: 400px;
+            height: 800px;
+            max-height: 100vh;
+            background-color: var(--bg-color);
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* Phone border updated to Navy */
+            border: 12px solid #1f2937;
+            /* Inner bezel updated to Orange */
+            outline: 2px solid var(--bears-orange);
+            outline-offset: -2px;
+        }
+
+        /* NFL Team Colors Banner Top Strip */
+        .nfl-banner {
+            display: flex;
+            width: 100%;
+            height: 12px;
+        }
+        .color-block { flex: 1; }
+        .c-kc1 { background-color: #E31837; } .c-kc2 { background-color: #FFB81C; }
+        .c-chi1 { background-color: var(--bears-navy); } .c-chi2 { background-color: var(--bears-orange); } 
+        .c-dal1 { background-color: #041E42; } .c-dal2 { background-color: #869397; }
+        .c-pit1 { background-color: #101820; } .c-pit2 { background-color: #FFB612; }
+        .c-mia1 { background-color: #008E97; } .c-mia2 { background-color: #FC4C02; }
+
+        /* Views (Screens) */
+        .view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        .view.active {
+            display: flex;
+        }
+
+        /* Typography & Layout */
+        h1 { font-size: 24px; color: var(--text-dark); margin-bottom: 8px; }
+        p { color: var(--text-light); font-size: 16px; margin-bottom: 24px; line-height: 1.5; }
+        strong { color: var(--text-dark); }
+        
+        /* Buttons */
+        .btn {
+            background-color: var(--card-bg);
+            border: 2px solid #E5E7EB;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            margin-bottom: 12px;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn:hover { border-color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-primary { background-color: var(--primary); color: white; border: none; text-align: center; justify-content: center; margin-top: 10px;}
+        .btn-primary:hover { background-color: #b33200; border-color: transparent;}
+        .btn-secondary { background-color: transparent; border: none; text-align: center; justify-content: center; color: var(--text-light); text-decoration: underline; margin-top: 10px; }
+
+        /* Inputs */
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 16px;
+            resize: none;
+            margin-bottom: 12px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Translation Elements */
+        .analogy-box {
+            background-color: #fffbeb;
+            border-left: 4px solid var(--yellow-flag);
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .analogy-title { font-weight: bold; color: #92400e; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;}
+
+        /* Header for secondary screens */
+        .app-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 16px;
+            color: var(--text-dark);
+        }
+        
+        /* Status Message */
+        .status-msg {
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status-error { background-color: #FEE2E2; color: #DC2626; display: block; }
+        .status-loading { background-color: #E0F2FE; color: #0284C7; display: block; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <div class="mobile-frame">
+        <!-- NFL Team Colors Banner Top Strip -->
+        <div class="nfl-banner">
+            <div class="color-block c-kc1"></div><div class="color-block c-kc2"></div>
+            <div class="color-block c-chi1"></div><div class="color-block c-chi2"></div>
+            <div class="color-block c-dal1"></div><div class="color-block c-dal2"></div>
+            <div class="color-block c-pit1"></div><div class="color-block c-pit2"></div>
+            <div class="color-block c-mia1"></div><div class="color-block c-mia2"></div>
+        </div>
+        
+        <!-- SCREEN 1: ONBOARDING -->
+        <div id="view-onboarding" class="view active">
+            <h1 style="margin-top: 20px;">🏈 Football Translator</h1>
+            <p>To help you understand the rules faster, how would you like us to explain them to you?</p>
+            
+            <button class="btn" onclick="selectTheme('Nails')">💅 Nails</button>
+            <button class="btn" onclick="selectTheme('Makeup')">💄 Makeup</button>
+            <button class="btn" onclick="selectTheme('Hair')">💇‍♀️ Hair</button>
+            <button class="btn" onclick="selectTheme('Everyday Life')">☕ Everyday Life</button>
+            
+            <div style="flex-grow: 1;"></div>
+            
+            <button class="btn btn-secondary" onclick="selectTheme('Plain English')">Skip to Live Game (Plain English)</button>
+        </div>
+
+        <!-- SCREEN 2: ASK QUESTION -->
+        <div id="view-ask" class="view">
+            <div class="app-header">
+                <button class="back-btn" onclick="showView('view-onboarding')">←</button>
+                <h1 style="margin:0;">Ask the Ref 🏟️</h1>
+            </div>
+            
+            <p id="ask-prompt">What did you see on the field? We'll translate it using <strong id="display-theme"></strong> terms.</p>
+            
+            <textarea id="user-question" rows="5" placeholder="Example: The ref threw a yellow flag and crossed his wrists in front of his chest..."></textarea>
+            
+            <button class="btn btn-primary" onclick="submitQuestion()">Translate This Play</button>
+            
+            <!-- Area for simulated actions and errors -->
+            <div id="status-area" class="status-msg"></div>
+
+            <!-- Simulated Results Area -->
+            <div id="simulated-result" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let userTheme = 'Plain English';
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            if (viewId === 'view-ask') {
+                document.getElementById('user-question').value = '';
+                document.getElementById('status-area').style.display = 'none';
+                document.getElementById('simulated-result').style.display = 'none';
+            }
+        }
+
+        function selectTheme(theme) {
+            userTheme = theme;
+            document.getElementById('display-theme').innerText = theme;
+            showView('view-ask');
+        }
+
+        function submitQuestion() {
+            const inputField = document.getElementById('user-question');
+            const question = inputField.value.trim();
+            const statusArea = document.getElementById('status-area');
+            const resultArea = document.getElementById('simulated-result');
+            
+            resultArea.style.display = 'none';
+            statusArea.className = 'status-msg';
+
+            if (question === '') {
+                statusArea.classList.add('status-error');
+                statusArea.innerHTML = '⚠️ Please type something so we know what to translate!';
+                return;
+            }
+
+            statusArea.classList.add('status-loading');
+            statusArea.innerHTML = `<em>Simulated Action: Using AI to translate your description into ${userTheme} terms...</em>`;
+            
+            setTimeout(() => {
+                statusArea.style.display = 'none';
+                resultArea.style.display = 'block';
+                
+                resultArea.innerHTML = `
+                    <div class="analogy-box">
+                        <div class="analogy-title">Simulated Answer (${userTheme} Mode)</div>
+                        <p style="margin-bottom: 12px;"><strong>What happened:</strong> It sounds like you're describing a <strong>False Start</strong>.</p>
+                        <p style="margin: 0; color: #1e293b;">
+                            <strong>Translation:</strong> 
+                            ${getFictionalAnalogy(userTheme)}
+                        </p>
+                    </div>
+                `;
+            }, 1500);
+        }
+
+        function getFictionalAnalogy(theme) {
+            if (theme === 'Nails') return 'It is like applying your top coat before the polish has dried! The offensive team moved and started the play too early, ruining the setup.';
+            if (theme === 'Makeup') return 'It is like starting your routine before the primer sets. The offensive team moved before the ball was officially snapped!';
+            if (theme === 'Hair') return 'It is like spraying hairspray before you finish using the curling iron. They jumped the gun and ruined the look!';
+            if (theme === 'Everyday Life') return 'It is like pulling away from the drive-thru window before they hand you your coffee. You moved too soon!';
+            return 'The offensive team moved before the ball was snapped. This is a 5-yard penalty.';
+        }
+    </script>
+</body>
+</html>
